@@ -11,7 +11,7 @@ Examples:
   import atexit
   import sysvipc
 
-  sem = sysvipc.semget(sysvipc.IPC_PRIVATE, 1, 0o000)
+  sem = sysvipc.semget(sysvipc.IPC_PRIVATE, 1, 0o600)
   atexit.register(lambda: sysvipc.semctl(sem, 0, sysvipc.IPC_RMID))
 
   sysvipc.semop(sem, [(0, 1, sysvipc.SEM_UNDO)])
