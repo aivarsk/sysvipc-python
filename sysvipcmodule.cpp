@@ -12,7 +12,7 @@ PYBIND11_MODULE(sysvipc, m) {
       [](int key, int nsems, int semflg) {
         int result = semget(key, nsems, semflg);
         if (result == -1) {
-          py::set_error(PyExc_OSError, strerror(errno));
+          PyErr_SetFromErrno(PyExc_OSError);
           throw pybind11::error_already_set();
         }
         return result;
@@ -32,7 +32,7 @@ PYBIND11_MODULE(sysvipc, m) {
         py::gil_scoped_release release;
         int result = semop(semid, &csemops[0], csemops.size());
         if (result == -1) {
-          py::set_error(PyExc_OSError, strerror(errno));
+          PyErr_SetFromErrno(PyExc_OSError);
           throw pybind11::error_already_set();
         }
         return result;
@@ -44,7 +44,7 @@ PYBIND11_MODULE(sysvipc, m) {
       [](int semid, int semnum, int op) {
         int result = semctl(semid, semnum, op);
         if (result == -1) {
-          py::set_error(PyExc_OSError, strerror(errno));
+          PyErr_SetFromErrno(PyExc_OSError);
           throw pybind11::error_already_set();
         }
         return result;
