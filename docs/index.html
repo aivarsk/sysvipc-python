@@ -1,0 +1,317 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>sysvipc - System V IPC primitives for Python</title>
+<meta name="description" content="Python bindings for System V IPC: semaphores, message queues, and shared memory.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=VT323&family=IBM+Plex+Mono:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --phosphor: #ffb640;
+    --phosphor-dim: #c98c2e;
+    --phosphor-bright: #ffd98a;
+    --bg: #120c00;
+    --bg-panel: #1c1302;
+    --bg-code: #0d0800;
+    --line: #4d3a12;
+    --glow: rgba(255, 182, 64, 0.35);
+  }
+
+  * { box-sizing: border-box; }
+
+  html { scroll-behavior: smooth; }
+
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--phosphor);
+    font-family: "IBM Plex Mono", ui-monospace, Menlo, Consolas, monospace;
+    font-size: 15px;
+    line-height: 1.6;
+    text-shadow: 0 0 6px var(--glow);
+  }
+
+  /* CRT scanlines + vignette */
+  body::before {
+    content: "";
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    z-index: 10;
+    background: repeating-linear-gradient(
+      to bottom,
+      rgba(0, 0, 0, 0.00) 0px,
+      rgba(0, 0, 0, 0.00) 2px,
+      rgba(0, 0, 0, 0.18) 3px,
+      rgba(0, 0, 0, 0.00) 4px
+    );
+  }
+  body::after {
+    content: "";
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    z-index: 11;
+    background: radial-gradient(ellipse at center, transparent 55%, rgba(0, 0, 0, 0.55) 100%);
+  }
+
+  .screen {
+    position: relative;
+    z-index: 1;
+    max-width: 880px;
+    margin: 0 auto;
+    padding: 48px 24px 96px;
+  }
+
+  h1, h2, h3, .prompt {
+    font-family: "VT323", "IBM Plex Mono", ui-monospace, monospace;
+    font-weight: 400;
+    letter-spacing: 1px;
+  }
+
+  h1 {
+    font-size: 56px;
+    line-height: 1;
+    margin: 0 0 4px;
+    color: var(--phosphor-bright);
+    text-transform: uppercase;
+  }
+
+  h2 {
+    font-size: 30px;
+    margin: 48px 0 16px;
+    color: var(--phosphor-bright);
+    border-bottom: 1px solid var(--line);
+    padding-bottom: 6px;
+    text-transform: uppercase;
+  }
+
+  h2::before { content: "> "; color: var(--phosphor-dim); }
+
+  h3 {
+    font-size: 22px;
+    margin: 28px 0 8px;
+    color: var(--phosphor);
+  }
+
+  p { margin: 12px 0; }
+
+  a {
+    color: var(--phosphor-bright);
+    text-decoration: underline;
+    text-decoration-style: dotted;
+    text-underline-offset: 3px;
+  }
+  a:hover { color: #fff; text-shadow: 0 0 10px var(--glow); }
+
+  .boot {
+    color: var(--phosphor-dim);
+    font-size: 13px;
+    margin-bottom: 24px;
+  }
+  .boot .ok { color: var(--phosphor); }
+
+  .tagline {
+    font-size: 17px;
+    color: var(--phosphor);
+    margin: 0 0 32px;
+  }
+
+  .cursor {
+    display: inline-block;
+    width: 0.6em;
+    height: 1.1em;
+    margin-left: 4px;
+    vertical-align: text-bottom;
+    background: var(--phosphor);
+    animation: blink 1.1s steps(1) infinite;
+  }
+  @keyframes blink { 50% { opacity: 0; } }
+
+  pre {
+    background: var(--bg-code);
+    border: 1px solid var(--line);
+    border-radius: 3px;
+    padding: 16px 18px;
+    overflow-x: auto;
+    font-size: 14px;
+    line-height: 1.55;
+    box-shadow: inset 0 0 24px rgba(0, 0, 0, 0.6);
+  }
+  code {
+    font-family: "IBM Plex Mono", ui-monospace, Menlo, Consolas, monospace;
+    color: var(--phosphor-bright);
+  }
+  p code, li code, td code {
+    background: var(--bg-code);
+    border: 1px solid var(--line);
+    border-radius: 3px;
+    padding: 1px 5px;
+    font-size: 13px;
+  }
+
+  pre .comment { color: var(--phosphor-dim); font-style: italic; }
+
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 16px 0;
+    font-size: 14px;
+  }
+  th, td {
+    text-align: left;
+    vertical-align: top;
+    padding: 7px 10px;
+    border: 1px solid var(--line);
+  }
+  th {
+    font-family: "VT323", monospace;
+    font-size: 19px;
+    font-weight: 400;
+    color: var(--phosphor-bright);
+    background: var(--bg-panel);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+  }
+  td:first-child { white-space: nowrap; }
+  tr:nth-child(even) td { background: rgba(255, 182, 64, 0.03); }
+
+  .man {
+    background: var(--bg-code);
+    border: 1px solid var(--line);
+    border-radius: 3px;
+    padding: 14px 18px;
+    margin: 12px 0;
+    font-size: 13.5px;
+  }
+  .man .name { color: var(--phosphor-bright); font-weight: 600; }
+  .man .args { color: var(--phosphor-dim); }
+
+  ul { padding-left: 22px; }
+  li { margin: 4px 0; }
+
+  .prompt-line {
+    margin: 28px 0 0;
+    color: var(--phosphor-dim);
+  }
+  .prompt-line::before { content: "$ "; color: var(--phosphor); }
+
+  footer {
+    margin-top: 72px;
+    padding-top: 18px;
+    border-top: 1px solid var(--line);
+    color: var(--phosphor-dim);
+    font-size: 13px;
+  }
+  footer a { color: var(--phosphor-dim); }
+
+  @media (max-width: 640px) {
+    h1 { font-size: 40px; }
+    body { font-size: 14px; }
+    td:first-child { white-space: normal; }
+  }
+</style>
+</head>
+<body>
+<div class="screen">
+
+  <div class="boot">
+    <span class="ok">[ ok ]</span> sysvipc 1.1.0<br>
+    <span class="ok">[ ok ]</span> semaphores, message queues, shared memory attached
+  </div>
+
+  <h1>sysvipc<span class="cursor"></span></h1>
+  <p class="tagline">System V IPC primitives for Python. Raw syscalls, thin wrappers, no ceremony.</p>
+
+  <p>
+    <code>sysvipc</code> exposes the classic AT&amp;T System V inter-process communication calls to
+    Python: semaphore sets (<code>semget</code>, <code>semop</code>, <code>semctl</code>),
+    message queues (<code>msgget</code>, <code>msgsnd</code>, <code>msgrcv</code>, <code>msgctl</code>),
+    and shared memory (<code>shmget</code>, <code>shmat</code>, <code>shmctl</code>).
+    Failures raise <code>OSError</code> straight from the kernel errno.
+  </p>
+
+  <p>
+    Why System V in the age of POSIX IPC? Because of the rawness. One <code>semop</code> call can
+    increment or decrement a semaphore by any value, operate atomically on a whole set, and the
+    <code>SEM_UNDO</code> flag asks the kernel to revert your operations when the process dies for
+    any reason. Message queues are addressable by type, shared memory is just memory.
+  </p>
+
+  <h2>Install</h2>
+  <p class="prompt-line">pip install sysvipc</p>
+  <pre><code>pip install sysvipc</code></pre>
+
+  <h2>Quick session</h2>
+  <pre><code><span class="comment"># Semaphores: acquire and release, kernel-managed cleanup</span>
+sem = sysvipc.semget(sysvipc.IPC_PRIVATE, 1, 0o600)
+atexit.register(lambda: sysvipc.semctl(sem, 0, sysvipc.IPC_RMID))
+
+sysvipc.semop(sem, [(0, 1, sysvipc.SEM_UNDO)])   <span class="comment"># release</span>
+curval = sysvipc.semctl(sem, 0, sysvipc.GETVAL)
+sysvipc.semop(sem, [(0, -1, sysvipc.SEM_UNDO)])  <span class="comment"># acquire</span>
+
+<span class="comment"># Message queues: typed messages</span>
+msqid = sysvipc.msgget(sysvipc.IPC_PRIVATE, 0o600)
+sysvipc.msgsnd(msqid, 1, "hello")
+mtype, message = sysvipc.msgrcv(msqid, 0, 1024)
+
+<span class="comment"># Shared memory: plain memoryview, plain bytes</span>
+shmid = sysvipc.shmget(sysvipc.IPC_PRIVATE, 4096, 0o600)
+with sysvipc.shmat(shmid) as mem:
+    memoryview(mem)[0:5] = b"hello"</code></pre>
+
+  <h2>Reference</h2>
+
+  <h3>Semaphores</h3>
+  <div class="man"><span class="name">semget</span> <span class="args">(key, nsems, semflg) -&gt; semid</span><br>Create or open a semaphore set.</div>
+  <div class="man"><span class="name">semop</span> <span class="args">(semid, sops) -&gt; 0</span><br>Apply a list of <span class="args">(sem_num, sem_op, sem_flg)</span> operations atomically. Released from the GIL while blocking.</div>
+  <div class="man"><span class="name">semtimedop</span> <span class="args">(semid, sops, timeout) -&gt; 0</span><br>Like <span class="name">semop</span> but gives up after <span class="args">timeout</span> seconds with <span class="args">EAGAIN</span>.</div>
+  <div class="man"><span class="name">semctl</span> <span class="args">(semid, semnum, cmd [, arg])</span><br>Control: <span class="args">IPC_RMID</span>, <span class="args">IPC_STAT</span> (dict), <span class="args">IPC_SET</span> (dict), <span class="args">GETVAL</span>, <span class="args">SETVAL</span> (int), <span class="args">GETALL</span> (list), <span class="args">SETALL</span> (list), <span class="args">GETPID</span>, <span class="args">GETNCNT</span>, <span class="args">GETZCNT</span>.</div>
+
+  <h3>Message queues</h3>
+  <div class="man"><span class="name">msgget</span> <span class="args">(key, msgflg) -&gt; msqid</span><br>Create or open a queue.</div>
+  <div class="man"><span class="name">msgsnd</span> <span class="args">(msqid, mtype, message [, msgflg]) -&gt; 0</span><br>Send <span class="args">bytes</span> or <span class="args">str</span> with a positive type.</div>
+  <div class="man"><span class="name">msgrcv</span> <span class="args">(msqid [, msgtyp [, msgsz [, msgflg]]]) -&gt; (mtype, message)</span><br>Receive. <span class="args">msgtyp &gt; 0</span> reads that type, <span class="args">msgtyp &lt; 0</span> reads the lowest type &lt;= abs(msgtyp), <span class="args">0</span> reads the first message. Defaults to <span class="args">msgsz = msg_qbytes</span>.</div>
+  <div class="man"><span class="name">msgctl</span> <span class="args">(msqid, cmd [, arg])</span><br>Control: <span class="args">IPC_RMID</span>, <span class="args">IPC_STAT</span> (dict), <span class="args">IPC_SET</span> (dict).</div>
+
+  <h3>Shared memory</h3>
+  <div class="man"><span class="name">shmget</span> <span class="args">(key, size, shmflg) -&gt; shmid</span><br>Allocate a segment.</div>
+  <div class="man"><span class="name">shmat</span> <span class="args">(shmid [, shmflg]) -&gt; shm</span><br>Attach. Returns a buffer object: slice it, wrap it in <span class="args">memoryview</span>, use it as a context manager. Detaches on exit or GC. <span class="args">SHM_RDONLY</span> gives a read-only view.</div>
+  <div class="man"><span class="name">shmctl</span> <span class="args">(shmid, cmd [, arg])</span><br>Control: <span class="args">IPC_RMID</span>, <span class="args">IPC_STAT</span> (dict), <span class="args">IPC_SET</span> (dict).</div>
+
+  <h2>Flags</h2>
+  <table>
+    <tr><th>Name</th><th>Meaning</th></tr>
+    <tr><td><code>IPC_PRIVATE</code></td><td>Always create a fresh, unkeyed resource.</td></tr>
+    <tr><td><code>IPC_CREAT</code> / <code>IPC_EXCL</code></td><td>Create if missing / fail if it already exists.</td></tr>
+    <tr><td><code>IPC_RMID</code></td><td>Remove the resource immediately.</td></tr>
+    <tr><td><code>IPC_STAT</code> / <code>IPC_SET</code></td><td>Read / write kernel status as a dict.</td></tr>
+    <tr><td><code>IPC_NOWAIT</code></td><td>Fail with <code>EAGAIN</code> or <code>ENOMSG</code> instead of blocking.</td></tr>
+    <tr><td><code>SEM_UNDO</code></td><td>Kernel undoes the operation when the process terminates. The pearl of System V IPC.</td></tr>
+    <tr><td><code>GETVAL</code> / <code>SETVAL</code></td><td>Read / set one semaphore value.</td></tr>
+    <tr><td><code>GETALL</code> / <code>SETALL</code></td><td>Read / set all semaphore values in the set.</td></tr>
+    <tr><td><code>GETPID</code> / <code>GETNCNT</code> / <code>GETZCNT</code></td><td>Last operating pid, waiters for increase, waiters for zero.</td></tr>
+    <tr><td><code>MSG_NOERROR</code></td><td>Truncate overlong messages instead of failing with <code>E2BIG</code>.</td></tr>
+    <tr><td><code>SHM_RDONLY</code></td><td>Attach shared memory for reading only.</td></tr>
+  </table>
+
+  <h2>Notes</h2>
+  <ul>
+    <li>Nothing is hidden: permissions are the raw <code>semflg</code>/<code>msgflg</code>/<code>shmflg</code> mode bits, cleanup is your <code>atexit</code> handler calling <code>IPC_RMID</code>.</li>
+    <li>Blocking calls (<code>semop</code>, <code>semtimedop</code>, <code>msgsnd</code>, <code>msgrcv</code>) drop the GIL so other Python threads keep running.</li>
+    <li>Shared memory is a real memoryview over the segment: writes are visible to every attached process at once.</li>
+  </ul>
+
+  <footer>
+    <p><a href="https://github.com/aivarsk/sysvipc-python">github.com/aivarsk/sysvipc-python</a></p>
+    <p>Inspired by <a href="https://aivarsk.com/2025/10/09/the-lost-art-of-semaphores/">The lost art of semaphores</a>. MIT license.</p>
+    <p class="prompt-line">logout</p>
+  </footer>
+
+</div>
+</body>
+</html>

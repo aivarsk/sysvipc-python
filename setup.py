@@ -1,7 +1,7 @@
 from setuptools import setup, Extension
 
 __name__ = 'sysvipc-python'
-__version__ = '1.0.0'
+__version__ = '1.1.0'
 
 class get_pybind_include(object):
     """Helper class to determine the pybind11 include path
