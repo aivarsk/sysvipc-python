@@ -22,7 +22,7 @@ setup(
     version=__version__,
     author='Aivars Kalvans',
     author_email='aivars.kalvans@gmail.com',
-    url='https://github.com/aivarsk/sysvipc-python',
+    url='https://aivarsk.com/sysvipc-python',
     description='Python3 bindings for System V IPC',
     long_description=open('README.rst').read(),
     setup_requires=['pybind11>=2.4'],
